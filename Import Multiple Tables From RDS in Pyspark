@@ -1,0 +1,19 @@
+#POSTGRESQL(RDS)    (create postgresql database in AWS RDS and stores multiples tables in that)
+
+from pyspark.sql import *
+from pyspark.sql.functions import *
+
+spark = SparkSession.builder.master("local[*]").appName("test").getOrCreate()
+
+
+url="jdbc:postgresql://posttdb.cc6ejjgwulcm.ap-south-1.rds.amazonaws.com:5432/pdb"    #POSTGRESQL URL
+alltabs=spark.read.format("jdbc").option("url",url).option("user","puser1").option("password","ppassword1").option("driver","org.postgresql.Driver")\
+    .option("dbtable","(SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE') t").load()
+    #postgresql url,user,password and jdbc driver names required
+    #USE POSTGRESQL MULTIPLE TABLES NAMES READING QUERY(SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE)
+    
+all=[x[0] for x in alltabs.collect()]
+for x in all:
+    df=spark.read.format("jdbc").option("url",url).option("user","puser1").option("password","ppassword1").option("driver","org.postgresql.Driver")\
+            .option("dbtable",x).load()
+    df.show()
