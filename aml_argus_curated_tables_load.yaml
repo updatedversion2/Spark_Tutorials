@@ -1,0 +1,321 @@
+source: AML
+dag_name: idp_aml_argus_curated_tables_load
+to_emails: "rahul.landge1_ern@idfcfirstbank.com"
+mail_notification: true
+dev_frame_path: /data1/idp_framework/code
+user_file_path: /data1/idp_framework/user_files/aml-argus
+schedule: '45 12 * * *'
+default_args:
+  - owner: 'airflow'
+    depends_on_past: False
+    email: ['rahul.landge1_ern@idfcfirstbank.com']
+    email_on_failure: True
+    email_on_retry: True
+dag_config:
+  - report_type: idp_aml_argus_transformed_scripts
+    task_type:
+        - tasks:
+
+            #############################  new success file added ###############################
+            - task_name: idp_aml_argus_check_ingest_success_file_asset_loan_transaction
+              upstream: idp_aml_argus_transformed_scripts
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            - task_name: idp_aml_argus_check_ingest_success_file_branch_master
+              upstream: idp_aml_argus_transformed_scripts
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_loan_account
+              upstream: idp_aml_argus_transformed_scripts
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_account
+              upstream: idp_aml_argus_transformed_scripts
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ###########################################################################################
+
+            - task_name: idp_aml_argus_commonlookup_refresh
+              upstream: idp_aml_argus_transformed_scripts
+              script: aml_argus_commonlookup
+              r_name : aml_argus_commonlookup
+
+            - task_name: idp_aml_argus_account
+              upstream: idp_aml_argus_check_ingest_success_file_aml_account
+              script: aml_account
+              r_name : aml_account
+            - task_name: idp_aml_argus_add_success_file_account
+              upstream: idp_aml_argus_account
+              script: add_success_file
+              r_name : aml_account
+            - task_name: idp_aml_argus_refresh_table_account
+              upstream: idp_aml_argus_add_success_file_account
+              script: refresh_table
+              r_name: aml_account
+
+            - task_name: idp_aml_argus_branch_master
+              upstream: idp_aml_argus_check_ingest_success_file_branch_master
+              script: aml_branch_master
+              r_name: aml_branch_master
+            - task_name: idp_aml_argus_add_success_file_branch_master
+              upstream: idp_aml_argus_branch_master
+              script: add_success_file
+              r_name: aml_branch_master
+            - task_name: idp_aml_argus_refresh_table_branch_master
+              upstream: idp_aml_argus_add_success_file_branch_master
+              script: refresh_table
+              r_name: aml_branch_master
+
+            ################  success file for aml customer #######################################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_customer
+              upstream: idp_aml_argus_branch_master
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ######################################################################################
+
+            - task_name: idp_aml_argus_customer
+              upstream: idp_aml_argus_check_ingest_success_file_aml_customer
+              script: aml_loan_customer
+              r_name : aml_customer
+            - task_name: idp_aml_argus_add_success_file_customer
+              upstream: idp_aml_argus_customer
+              script: add_success_file
+              r_name : aml_customer
+            - task_name: idp_aml_argus_refresh_table_customer
+              upstream: idp_aml_argus_add_success_file_customer
+              script: refresh_table
+              r_name: aml_customer
+
+            ################# SUCCESS FILE FOR CUSTOMER CONTACT ############################################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_customer_contact
+              upstream: idp_aml_argus_refresh_table_customer
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ##########################################################################################
+
+            - task_name: idp_aml_argus_customer_contact
+              upstream: idp_aml_argus_check_ingest_success_file_aml_customer_contact
+              script: aml_customer_contact
+              r_name : aml_customer_contact
+            - task_name: idp_aml_argus_add_success_file_customer_contact
+              upstream: idp_aml_argus_customer_contact
+              script: add_success_file
+              r_name : aml_customer_contact
+            - task_name: idp_aml_argus_refresh_table_customer_contact
+              upstream: idp_aml_argus_add_success_file_customer_contact
+              script: refresh_table
+              r_name: aml_customer_contact
+
+            ################# SUCCESS FILE FOR CUSTOMER ADDRESS ############################################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_customer_address
+              upstream: idp_aml_argus_refresh_table_customer
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ##########################################################################################
+
+            - task_name: idp_aml_argus_customer_address
+              upstream: idp_aml_argus_check_ingest_success_file_aml_customer_address
+              script: aml_customer_address
+              r_name : aml_customer_address
+            - task_name: idp_aml_argus_add_success_file_customer_address
+              upstream: idp_aml_argus_customer_address
+              script: add_success_file
+              r_name : aml_customer_address
+            - task_name: idp_aml_argus_refresh_table_customer_address
+              upstream: idp_aml_argus_add_success_file_customer_address
+              script: refresh_table
+              r_name: aml_customer_address
+
+            - task_name: idp_aml_argus_party_details
+              upstream: idp_aml_argus_refresh_table_account
+              script: aml_party_details
+              r_name : aml_party_details
+            - task_name: idp_aml_argus_add_success_file_party_details
+              upstream: idp_aml_argus_party_details
+              script: add_success_file
+              r_name : aml_party_details
+            - task_name: idp_aml_argus_refresh_table_party_details
+              upstream: idp_aml_argus_add_success_file_party_details
+              script: refresh_table
+              r_name: aml_party_details
+
+            - task_name: idp_aml_argus_country_risk
+              upstream: idp_aml_argus_refresh_table_branch_master
+              script: aml_country_risk
+              r_name : aml_country_risk
+            - task_name: idp_aml_argus_add_success_file_country_risk
+              upstream: idp_aml_argus_country_risk
+              script: add_success_file
+              r_name : aml_country_risk
+            - task_name: idp_aml_argus_refresh_table_country_risk
+              upstream: idp_aml_argus_add_success_file_country_risk
+              script: refresh_table
+              r_name: aml_country_risk
+
+            ################# SUCCESS FILE FOR ASSET CARD ############################################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_asset_cards
+              upstream: idp_aml_argus_refresh_table_country_risk
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ##########################################################################################
+
+            - task_name: idp_aml_argus_asset_cards
+              upstream: idp_aml_argus_check_ingest_success_file_aml_asset_cards
+              script: aml_asset_cards
+              r_name: aml_asset_cards
+            - task_name: idp_aml_argus_add_success_file_asset_cards
+              upstream: idp_aml_argus_asset_cards
+              script: add_success_file
+              r_name: aml_asset_cards
+            - task_name: idp_aml_argus_refresh_table_asset_cards
+              upstream: idp_aml_argus_add_success_file_asset_cards
+              script: refresh_table
+              r_name: aml_asset_cards
+
+            - task_name: idp_aml_argus_asset_loan_transaction
+              upstream: idp_aml_argus_check_ingest_success_file_asset_loan_transaction
+              script: aml_asset_loan_transaction
+              r_name: aml_asset_loan_transaction
+            - task_name: idp_aml_argus_add_success_file_asset_loan_transaction
+              upstream: idp_aml_argus_asset_loan_transaction
+              script: add_success_file
+              r_name: aml_asset_loan_transaction
+            - task_name: idp_aml_argus_refresh_table_asset_loan_transaction
+              upstream: idp_aml_argus_add_success_file_asset_loan_transaction
+              script: refresh_table
+              r_name: aml_asset_loan_transaction
+
+            - task_name: idp_aml_argus_asset_loan_account
+              upstream: idp_aml_argus_check_ingest_success_file_aml_loan_account
+              script: aml_loan_account
+              r_name: aml_loan_account
+            - task_name: idp_aml_argus_add_success_file_asset_loan_account
+              upstream: idp_aml_argus_asset_loan_account
+              script: add_success_file
+              r_name: aml_loan_account
+            - task_name: idp_aml_argus_refresh_table_asset_loan_account
+              upstream: idp_aml_argus_add_success_file_asset_loan_account
+              script: refresh_table
+              r_name: aml_loan_account
+
+            - task_name: idp_aml_argus_cust_acct_link
+              upstream: idp_aml_argus_refresh_table_account,idp_aml_argus_refresh_table_asset_loan_account
+              script: aml_cust_acct_link
+              r_name : aml_cust_acct_link
+            - task_name: idp_aml_argus_add_success_file_cust_acct_link
+              upstream: idp_aml_argus_cust_acct_link
+              script: add_success_file
+              r_name : aml_cust_acct_link
+            - task_name: idp_aml_argus_refresh_table_cust_acct_link
+              upstream: idp_aml_argus_add_success_file_cust_acct_link
+              script: refresh_table
+              r_name: aml_cust_acct_link
+
+            ##################### SUCCESS FOR idp_aml_argus_aml_txn_daily_cbs ############################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_txn_daily_cbs
+              upstream: idp_aml_argus_transformed_scripts
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            #############################################################################################
+
+            - task_name: idp_aml_argus_txn_daily_upi
+              upstream: idp_aml_argus_check_ingest_success_file_aml_txn_daily_cbs
+              script: aml_txn_daily_common
+              r_name : aml_txn_daily
+
+            - task_name: idp_aml_argus_txn_daily_rtgs_neft_imps
+              upstream: idp_aml_argus_check_ingest_success_file_aml_txn_daily_cbs
+              script: aml_txn_daily_common
+              r_name : aml_txn_daily
+
+            - task_name: idp_aml_argus_txn_daily_rest
+              upstream: idp_aml_argus_check_ingest_success_file_aml_txn_daily_cbs
+              script: aml_txn_daily_common
+              r_name : aml_txn_daily
+
+            ##################### SUCCESS FOR idp_aml_argus_aml_txn_daily_prime ############################
+            - task_name: idp_aml_argus_check_ingest_success_file_aml_txn_daily_prime
+              upstream: idp_aml_argus_refresh_table_customer
+              script: idp_aml_argus_check_ingest_success_file
+              r_name: idp_aml_argus_check_ingest_success_file
+
+            ###############################################################################
+
+            - task_name: idp_aml_argus_aml_txn_daily_prime
+              upstream: idp_aml_argus_check_ingest_success_file_aml_txn_daily_prime
+              script: aml_txn_daily_prime
+              r_name: aml_txn_daily
+
+            - task_name: idp_aml_argus_add_success_file_txn_daily
+              upstream: idp_aml_argus_txn_daily_upi, idp_aml_argus_txn_daily_rtgs_neft_imps, idp_aml_argus_txn_daily_rest,idp_aml_argus_aml_txn_daily_prime
+              script: add_success_file
+              r_name : aml_txn_daily
+
+            - task_name: idp_aml_argus_refresh_table_txn_daily
+              upstream: idp_aml_argus_add_success_file_txn_daily
+              script: refresh_table
+              r_name: aml_txn_daily
+
+            - task_name: idp_aml_argus_txn_aggr_daily
+              upstream: idp_aml_argus_refresh_table_txn_daily
+              script: aml_txn_aggr_daily
+              r_name : aml_txn_aggr_daily
+            - task_name: idp_aml_argus_add_success_file_txn_aggr_daily
+              upstream: idp_aml_argus_txn_aggr_daily
+              script: add_success_file
+              r_name : aml_txn_aggr_daily
+            - task_name: idp_aml_argus_refresh_table_txn_aggr_daily
+              upstream: idp_aml_argus_add_success_file_txn_aggr_daily
+              script: refresh_table
+              r_name: aml_txn_aggr_daily
+
+              ####################STAGING INCT CREATION AND CONSUMPTION###################
+
+            #STAGING INCT_DERIVED
+            - task_name: idp_aml_argus_inct_derived_staging
+              upstream: idp_aml_argus_check_ingest_success_file_aml_txn_daily_cbs
+              script: aml_inct_derived
+              r_name: inct_derived_staging
+
+            - task_name: idp_aml_argus_refresh_table_inct_derived_staging
+              upstream: idp_aml_argus_inct_derived_staging
+              script: refresh_table
+              r_name: aml_inct_derived
+
+            #STAGING INCT_DERIVED CONSUMPTION
+            - task_name: execute_aml_trn_daily_inct_derived_upi
+              upstream: idp_aml_argus_inct_derived_staging
+              script: aml_txn_daily
+              r_name: aml_txn_daily_inct_derived
+
+            - task_name: execute_aml_trn_daily_inct_derived_rtgs_neft_imps
+              upstream: idp_aml_argus_inct_derived_staging
+              script: aml_txn_daily
+              r_name: aml_txn_daily_inct_derived
+
+            - task_name: execute_aml_trn_daily_inct_derived_rest
+              upstream: idp_aml_argus_inct_derived_staging
+              script: aml_txn_daily
+              r_name: aml_txn_daily_inct_derived
+
+            - task_name: idp_aml_argus_refresh_table_aml_txn_daily_inct_derived
+              upstream: execute_aml_trn_daily_inct_derived_upi, execute_aml_trn_daily_inct_derived_rtgs_neft_imps, execute_aml_trn_daily_inct_derived_rest
+              script: refresh_table
+              r_name: aml_txn_daily_inct_derived
+
+            - task_name: idp_aml_argus_send_mail_notification
+              upstream: idp_aml_argus_refresh_table_account,idp_aml_argus_refresh_table_customer,idp_aml_argus_refresh_table_cust_acct_link,idp_aml_argus_refresh_table_party_details,idp_aml_argus_refresh_table_branch_master,idp_aml_argus_refresh_table_txn_daily,idp_aml_argus_refresh_table_txn_aggr_daily,idp_aml_argus_refresh_table_customer_address,idp_aml_argus_refresh_table_customer_contact,idp_aml_argus_refresh_table_asset_cards,idp_aml_argus_refresh_table_asset_loan_account,idp_aml_argus_refresh_table_asset_loan_transaction
+              script: send_mail_notification_adl
+              r_name: send_mail_notification_adl
+
+          report_names: "curated_table"
